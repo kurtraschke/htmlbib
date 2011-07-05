@@ -5,7 +5,6 @@ import argparse
 import subprocess
 import shlex
 
-import lxml
 import lxml.etree as etree
 
 def htmlpreview(bibfile, citekey, bibstyle='IEEEtran'):
