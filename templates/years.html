@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="span-16 append-4 prepend-4">
+
+<ul>
+{% for year in sorted(years.keys()) %}
+<li id="{{year}}">{{year}}
+  <ul>
+    {% for pub in years[year] %}
+    <li><a href="detail.html#{{pub.cite_key.get()}}">{{fix_title(pub.title.get())}}</a></li>
+    {% endfor %}
+  </ul>
+</li>
+{% endfor %}
+</ul>
+
+</div>
+{% endblock %}

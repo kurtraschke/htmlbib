@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block head %}
+{{super()}}
+<script src="static/js/main.js"></script>
+<link rel="stylesheet" type="text/css" href="static/css/tabs.css">
+{% endblock %}
+
+{% block content %}
+{% for publication in publications %}
+<div id="{{ publication.cite_key.get() }}">
+  <div class="span-2 append-2">
+    <h2>{{ publication.cite_key.get() }}</h2>
+  </div>
+
+  <div class="span-18 append-2 last">
+    <div class="citepreview">
+       {{preview(publication)}}
+       <p>Keywords: {% for kw in keywords(publication) %}<a
+href="keywords.html#{{kw.replace(' ','_')}}">{{kw}}</a>{{ ', ' if not
+loop.last}}{% endfor %}</p>
+    </div>
+
+    <button class="toggler">Show details</button>
+    <section class="details">
+      <ul class="tabs">
+        <a href="#">Fields</a>
+        <a href="#">BibTeX</a>
+        <a href="#">RIS</a>
+      </ul>
+      <div class="pane">
+        <dl>
+          {% for field in publication.fields.get() %}
+          <dt>{{field.name.get()}}</dt>
+          <dd>{{field.value.get()}}</dd>
+          {% endfor %}
+        </dl>
+      </div>
+      <div class="pane">
+        <code><pre>{{publication.BibTeX_string.get()}}</code></pre>
+      </div>
+      <div class="pane">
+        <code><pre>{{publication.RIS_string.get()}}</code></pre>
+      </div>
+    </section>
+  </div>
+</div>
+<hr>
+
+{% endfor %}
+
+{% endblock %}

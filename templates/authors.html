@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="span-16 append-4 prepend-4">
+<ul>
+{% for author in names %}
+<li>{{author.full_name.get()}}
+  <ul>
+    {% for pub in author.publications.get() %}
+    <li><a href="detail.html#{{pub.cite_key.get()}}">{{fix_title(pub.title.get())}}</a></li>
+    {% endfor %}
+  </ul>
+</li>
+{% endfor %}
+</ul>
+</div>
+{% endblock %}
