@@ -11,7 +11,7 @@ from collections import defaultdict
 
 from appscript import *
 from mactypes import *
-from jinja2 import Environment, FileSystemLoader, Markup
+from jinja2 import Environment, FileSystemLoader, Markup, FileSystemBytecodeCache
 
 from makepreview import htmlpreview
 from textitle import fix_title
@@ -31,26 +31,34 @@ bibstyle = args.style
 if not os.path.exists(outdir):
     os.mkdir(outdir)
 
-#elif os.path.exists(outdir) and not os.path.isdir(outdir)
+cachedir = os.path.join(outdir, "cache")
+if not os.path.exists(cachedir):
+    os.mkdir(cachedir)
+
+
+templatecachedir = os.path.join(cachedir, "templates")
+if not os.path.exists(templatecachedir):
+    os.mkdir(templatecachedir)
 
 bd = app('BibDesk')
 doc = bd.open(Alias(bibfile))
 pubs = doc.publications.get()
 sortedpubs = bd.sort(pubs, by=u'cite key')
 
-env = Environment(loader=FileSystemLoader(templatedir))
+env = Environment(loader=FileSystemLoader(templatedir),
+                  bytecode_cache=FileSystemBytecodeCache(directory=templatecachedir))
 env.globals['sorted'] = sorted
 env.globals['fix_title'] = fix_title
 
 def cachedpreview(publication, bibfile, bibstyle):
     citekey = str(publication.cite_key.get())
     lastmod = publication.modified_date.get()
-    with closing(shelve.open(os.path.join(outdir, "previewcache"))) as cache:
+    with closing(shelve.open(os.path.join(cachedir, "previews"))) as cache:
         if citekey not in cache or lastmod > cache[citekey]['lastmod']:
             data = {'lastmod': lastmod,
                     'preview': htmlpreview(bibfile, citekey, bibstyle)}
             cache[citekey] = data
-            
+
         preview = cache[citekey]['preview']
     return preview
 
