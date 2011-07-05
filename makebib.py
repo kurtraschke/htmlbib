@@ -13,7 +13,7 @@ from mactypes import *
 from jinja2 import Environment, FileSystemLoader, Markup, FileSystemBytecodeCache
 
 from makepreview import htmlpreview
-from textitle import fix_title
+from tools import fix_title, publication_keywords
 
 parser = argparse.ArgumentParser(description='Generate an HTML preview for a BibTeX entry.')
 parser.add_argument('-s', '--style', help="BibTeX style", default='IEEEtran')
@@ -48,6 +48,7 @@ env = Environment(loader=FileSystemLoader(templatedir),
                   bytecode_cache=FileSystemBytecodeCache(directory=templatecachedir))
 env.globals['sorted'] = sorted
 env.globals['fix_title'] = fix_title
+env.globals['keywords'] = publication_keywords
 
 def cachedpreview(publication, bibfile, bibstyle):
     citekey = str(publication.cite_key.get())
@@ -60,13 +61,6 @@ def cachedpreview(publication, bibfile, bibstyle):
 
         preview = cache[citekey]['preview']
     return preview
-
-def publication_keywords(publication):
-    keywords = publication.keywords.get()
-    if keywords == '':
-        return []
-    else:
-        return [kw.strip() for kw in re.split(',|;', keywords)]
 
 
 def render_template(template_name, **kwargs):

@@ -1,5 +1,14 @@
 import re
 
+
+def publication_keywords(publication):
+    keywords = publication.keywords.get()
+    if keywords == '':
+        return []
+    else:
+        return [kw.strip() for kw in re.split(',|;', keywords)]
+
+
 def fix_title(title):
     replacements = [
         ('``', u'\u201C'),
