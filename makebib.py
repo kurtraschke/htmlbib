@@ -1,7 +1,6 @@
 import argparse
 import os
 import os.path
-import codecs
 import shelve
 import shutil
 import re
@@ -70,16 +69,19 @@ def publication_keywords(publication):
         return [kw.strip() for kw in re.split(',|;', keywords)]
 
 
+def render_template(template_name, **kwargs):
+    template = env.get_template(template_name)
+    stream = template.stream(**kwargs)
+    stream.dump(os.path.join(outdir, template_name), "utf-8")
+
+
 def make_detail():
-    template = env.get_template('bibliography.html')
-    out = template.render(publications=sortedpubs,
-                          preview=lambda publication: Markup(cachedpreview(publication,
-                                                                           bibfile,
-                                                                           bibstyle)),
-                          keywords=publication_keywords)
-    
-    with codecs.open(os.path.join(outdir,"detail.html"), "w", "utf-8") as f:
-        f.write(out)
+    render_template('detail.html', publications=sortedpubs,
+                    preview=lambda publication: Markup(cachedpreview(publication,
+                                                                     bibfile,
+                                                                     bibstyle)),
+                    keywords=publication_keywords)
+
 
 def make_keywords():
     keywords = defaultdict(list)
@@ -87,11 +89,8 @@ def make_keywords():
         for kw in publication_keywords(pub):
             keywords[kw].append(pub)
 
-    template = env.get_template('keywords.html')
-    out = template.render(keywords=keywords)
-    
-    with codecs.open(os.path.join(outdir,"keywords.html"), "w", "utf-8") as f:
-        f.write(out)
+    render_template('keywords.html', keywords=keywords)
+
 
 def make_years():
     years = defaultdict(list)
@@ -100,21 +99,15 @@ def make_years():
         if year != '':
             years[year].append(pub)
 
-    template = env.get_template('years.html')
-    out = template.render(years=years)
-    
-    with codecs.open(os.path.join(outdir,"years.html"), "w", "utf-8") as f:
-        f.write(out)
+    render_template('years.html', years=years)
+
 
 def make_authors():
     authors = doc.authors.get()
     names = sorted(authors, key=lambda x: x.last_name.get())
 
-    template = env.get_template('authors.html')
-    out = template.render(authors=authors, names=names)
-    
-    with codecs.open(os.path.join(outdir,"authors.html"), "w", "utf-8") as f:
-        f.write(out)
+    render_template('authors.html', authors=authors, names=names)
+
 
 def make_journals():
     journals = defaultdict(list)
@@ -124,13 +117,8 @@ def make_journals():
         if journal != '':
             journals[journal].append(pub)
 
-    template = env.get_template('journals.html')
-    out = template.render(journals=journals)
-    
-    with codecs.open(os.path.join(outdir,"journals.html"), "w", "utf-8") as f:
-        f.write(out)
+    render_template('journals.html', journals=journals)
 
-    
 
 make_detail()
 make_keywords()
@@ -139,6 +127,4 @@ make_authors()
 make_journals()
 
 shutil.rmtree(os.path.join(outdir, 'static'), True)
-shutil.copytree(os.path.join(templatedir,'static'), os.path.join(outdir, 'static')) 
-
-
+shutil.copytree(os.path.join(templatedir,'static'), os.path.join(outdir, 'static'))
