@@ -7,7 +7,7 @@ import shlex
 
 import lxml.etree as etree
 
-def htmlpreview(bibfile, citekey, bibstyle='IEEEtran'):
+def htmlpreview(bibfile, citekey, bibstyle):
     basename = os.path.split(bibfile)[1].split('.')[0]
     workingdir = tempfile.mkdtemp()
 

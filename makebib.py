@@ -17,15 +17,16 @@ from makepreview import htmlpreview
 from textitle import fix_title
 
 parser = argparse.ArgumentParser(description='Generate an HTML preview for a BibTeX entry.')
+parser.add_argument('-s', '--style', help="BibTeX style", default='IEEEtran')
 parser.add_argument('file', help='BibTeX file')
 parser.add_argument('outdir', help='Output directory')
 parser.add_argument('templatedir', help='Template directory', default='templates')
 
 args = parser.parse_args()
-inputfile = os.path.abspath(args.file)
+bibfile = os.path.abspath(args.file)
 outdir = os.path.abspath(args.outdir)
 templatedir = os.path.abspath(args.templatedir)
-
+bibstyle = args.style
 
 if not os.path.exists(outdir):
     os.mkdir(outdir)
@@ -33,7 +34,7 @@ if not os.path.exists(outdir):
 #elif os.path.exists(outdir) and not os.path.isdir(outdir)
 
 bd = app('BibDesk')
-doc = bd.open(Alias(inputfile))
+doc = bd.open(Alias(bibfile))
 pubs = doc.publications.get()
 sortedpubs = bd.sort(pubs, by=u'cite key')
 
@@ -41,13 +42,13 @@ env = Environment(loader=FileSystemLoader(templatedir))
 env.globals['sorted'] = sorted
 env.globals['fix_title'] = fix_title
 
-def cachedpreview(publication, previewer):
+def cachedpreview(publication, bibfile, bibstyle):
     citekey = str(publication.cite_key.get())
     lastmod = publication.modified_date.get()
-    with closing(shelve.open("previewcache")) as cache:
+    with closing(shelve.open(os.path.join(outdir, "previewcache"))) as cache:
         if citekey not in cache or lastmod > cache[citekey]['lastmod']:
             data = {'lastmod': lastmod,
-                    'preview': previewer(citekey)}
+                    'preview': htmlpreview(bibfile, citekey, bibstyle)}
             cache[citekey] = data
             
         preview = cache[citekey]['preview']
@@ -63,9 +64,10 @@ def publication_keywords(publication):
 
 def make_detail():
     template = env.get_template('bibliography.html')
-    out = template.render(publications=sortedpubs, preview=lambda publication: Markup(
-        cachedpreview(publication,
-                      lambda citekey: htmlpreview(inputfile, citekey))),
+    out = template.render(publications=sortedpubs,
+                          preview=lambda publication: Markup(cachedpreview(publication,
+                                                                           bibfile,
+                                                                           bibstyle)),
                           keywords=publication_keywords)
     
     with codecs.open(os.path.join(outdir,"detail.html"), "w", "utf-8") as f:
