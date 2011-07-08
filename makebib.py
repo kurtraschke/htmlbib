@@ -10,7 +10,8 @@ from zlib import crc32
 
 from appscript import *
 from mactypes import *
-from jinja2 import Environment, FileSystemLoader, Markup, FileSystemBytecodeCache
+from jinja2 import Environment, FileSystemLoader
+from jinja2 import Markup, FileSystemBytecodeCache
 
 from makepreview import htmlpreview
 from tools import fix_title, publication_keywords, nl2br
@@ -61,20 +62,23 @@ class BibMaker(object):
                 self.keywords[kw].append(pub)
             year = pub.publication_year.get()
             if year != '':
-               self.years[year].append(pub)
+                self.years[year].append(pub)
 
-        self.env.globals.update({'doc':self.doc, 'pubs':self.pubs, 'sortedpubs':self.sortedpubs,
-                                 'journals': self.journals, 'keywords': self.keywords,
-                                 'years': self.years, 'authors': self.doc.authors.get(),
+        self.env.globals.update({'doc': self.doc, 'pubs': self.pubs,
+                                 'sortedpubs': self.sortedpubs,
+                                 'journals': self.journals,
+                                 'keywords': self.keywords,
+                                 'years': self.years,
+                                 'authors': self.doc.authors.get(),
                                  'names': sorted(self.doc.authors.get(),
                                                  key=lambda x: x.last_name.get())})
 
-
         templates = {'detail.html': {'publications': self.sortedpubs,
-                                     'preview': lambda publication: Markup(cachedpreview(publication,
-                                                                                         self.bibfile,
-                                                                                         self.bibstyle,
-                                                                                         self.cachedir))},
+                                     'preview': lambda publication: Markup(
+                                         cachedpreview(publication,
+                                                       self.bibfile,
+                                                       self.bibstyle,
+                                                       self.cachedir))},
                      'keywords.html': {},
                      'years.html': {},
                      'authors.html': {},
@@ -85,9 +89,8 @@ class BibMaker(object):
             self.render_template(template, **args)
 
         shutil.rmtree(os.path.join(self.outdir, 'static'), True)
-        shutil.copytree(os.path.join(self.templatedir,'static'), os.path.join(self.outdir, 'static'))
+        shutil.copytree(os.path.join(self.templatedir, 'static'), os.path.join(self.outdir, 'static'))
         shutil.copy(self.bibfile, self.outdir)
-
 
     def render_template(self, template_name, **kwargs):
         template = self.env.get_template(template_name)
@@ -107,13 +110,14 @@ def cachedpreview(publication, bibfile, bibstyle, cachedir):
         preview = cache[citekey]['preview']
     return preview
 
+
 def main():
     parser = argparse.ArgumentParser(description='Generate an HTML preview for a BibTeX entry.')
     parser.add_argument('-s', '--style', help="BibTeX style", default='IEEEtran')
     parser.add_argument('file', help='BibTeX file')
     parser.add_argument('outdir', help='Output directory')
     parser.add_argument('templatedir', help='Template directory', default='templates')
-    
+
     args = parser.parse_args()
     bibfile = os.path.abspath(args.file)
     outdir = os.path.abspath(args.outdir)
