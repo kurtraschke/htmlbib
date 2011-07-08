@@ -6,51 +6,96 @@ import shutil
 import re
 from contextlib import closing
 from collections import defaultdict
-
+from zlib import crc32
 
 from appscript import *
 from mactypes import *
 from jinja2 import Environment, FileSystemLoader, Markup, FileSystemBytecodeCache
 
 from makepreview import htmlpreview
-from tools import fix_title, publication_keywords
-
-parser = argparse.ArgumentParser(description='Generate an HTML preview for a BibTeX entry.')
-parser.add_argument('-s', '--style', help="BibTeX style", default='IEEEtran')
-parser.add_argument('file', help='BibTeX file')
-parser.add_argument('outdir', help='Output directory')
-parser.add_argument('templatedir', help='Template directory', default='templates')
-
-args = parser.parse_args()
-bibfile = os.path.abspath(args.file)
-outdir = os.path.abspath(args.outdir)
-templatedir = os.path.abspath(args.templatedir)
-bibstyle = args.style
-
-if not os.path.exists(outdir):
-    os.mkdir(outdir)
-
-cachedir = os.path.join(outdir, "cache")
-if not os.path.exists(cachedir):
-    os.mkdir(cachedir)
+from tools import fix_title, publication_keywords, nl2br
 
 
-templatecachedir = os.path.join(cachedir, "templates")
-if not os.path.exists(templatecachedir):
-    os.mkdir(templatecachedir)
+class BibMaker(object):
+    def __init__(self, bibfile, outdir, templatedir, bibstyle):
+        self.bibfile = bibfile
+        self.outdir = outdir
+        self.templatedir = templatedir
+        self.bibstyle = bibstyle
 
-bd = app('BibDesk')
-doc = bd.open(Alias(bibfile))
-pubs = doc.publications.get()
-sortedpubs = bd.sort(pubs, by=u'cite key')
+    def makebib(self):
+        if not os.path.exists(self.outdir):
+            os.mkdir(self.outdir)
 
-env = Environment(loader=FileSystemLoader(templatedir),
-                  bytecode_cache=FileSystemBytecodeCache(directory=templatecachedir))
-env.globals['sorted'] = sorted
-env.globals['fix_title'] = fix_title
-env.globals['keywords'] = publication_keywords
+        self.cachedir = os.path.join(self.outdir, "cache")
+        if not os.path.exists(self.cachedir):
+            os.mkdir(self.cachedir)
 
-def cachedpreview(publication, bibfile, bibstyle):
+        templatecachedir = os.path.join(self.cachedir, "templates")
+        if not os.path.exists(templatecachedir):
+            os.mkdir(templatecachedir)
+
+        bd = app('BibDesk', hide=True)
+        self.doc = bd.open(Alias(self.bibfile))
+        self.pubs = self.doc.publications.get()
+        self.sortedpubs = bd.sort(self.pubs, by=u'cite key')
+
+        self.env = Environment(loader=FileSystemLoader(self.templatedir),
+                               bytecode_cache=FileSystemBytecodeCache(directory=templatecachedir),
+                               autoescape=True)
+
+        self.env.globals.update({'sorted': sorted, 'fix_title': fix_title,
+                                 'split_keywords': publication_keywords,
+                                 'id_hash': lambda x: "%08x" % (crc32(x.encode('utf-8')) & 0xffffffff)})
+        self.env.filters['nl2br'] = nl2br
+
+        self.journals = defaultdict(list)
+        self.keywords = defaultdict(list)
+        self.years = defaultdict(list)
+
+        for pub in self.pubs:
+            journal = pub.fields[u'Journal'].value.get() or pub.fields[u'Booktitle'].value.get()
+            if journal != '':
+                self.journals[journal].append(pub)
+            for kw in publication_keywords(pub):
+                self.keywords[kw].append(pub)
+            year = pub.publication_year.get()
+            if year != '':
+               self.years[year].append(pub)
+
+        self.env.globals.update({'doc':self.doc, 'pubs':self.pubs, 'sortedpubs':self.sortedpubs,
+                                 'journals': self.journals, 'keywords': self.keywords,
+                                 'years': self.years, 'authors': self.doc.authors.get(),
+                                 'names': sorted(self.doc.authors.get(),
+                                                 key=lambda x: x.last_name.get())})
+
+
+        templates = {'detail.html': {'publications': self.sortedpubs,
+                                     'preview': lambda publication: Markup(cachedpreview(publication,
+                                                                                         self.bibfile,
+                                                                                         self.bibstyle,
+                                                                                         self.cachedir))},
+                     'keywords.html': {},
+                     'years.html': {},
+                     'authors.html': {},
+                     'journals.html': {},
+                     'index.html': {'filename': os.path.split(self.bibfile)[1]}}
+
+        for template, args in templates.iteritems():
+            self.render_template(template, **args)
+
+        shutil.rmtree(os.path.join(self.outdir, 'static'), True)
+        shutil.copytree(os.path.join(self.templatedir,'static'), os.path.join(self.outdir, 'static'))
+        shutil.copy(self.bibfile, self.outdir)
+
+
+    def render_template(self, template_name, **kwargs):
+        template = self.env.get_template(template_name)
+        stream = template.stream(**kwargs)
+        stream.dump(os.path.join(self.outdir, template_name), "utf-8")
+
+
+def cachedpreview(publication, bibfile, bibstyle, cachedir):
     citekey = str(publication.cite_key.get())
     lastmod = publication.modified_date.get()
     with closing(shelve.open(os.path.join(cachedir, "previews"))) as cache:
@@ -62,63 +107,20 @@ def cachedpreview(publication, bibfile, bibstyle):
         preview = cache[citekey]['preview']
     return preview
 
+def main():
+    parser = argparse.ArgumentParser(description='Generate an HTML preview for a BibTeX entry.')
+    parser.add_argument('-s', '--style', help="BibTeX style", default='IEEEtran')
+    parser.add_argument('file', help='BibTeX file')
+    parser.add_argument('outdir', help='Output directory')
+    parser.add_argument('templatedir', help='Template directory', default='templates')
+    
+    args = parser.parse_args()
+    bibfile = os.path.abspath(args.file)
+    outdir = os.path.abspath(args.outdir)
+    templatedir = os.path.abspath(args.templatedir)
+    bibstyle = args.style
 
-def render_template(template_name, **kwargs):
-    template = env.get_template(template_name)
-    stream = template.stream(**kwargs)
-    stream.dump(os.path.join(outdir, template_name), "utf-8")
+    BibMaker(bibfile, outdir, templatedir, bibstyle).makebib()
 
-
-def make_detail():
-    render_template('detail.html', publications=sortedpubs,
-                    preview=lambda publication: Markup(cachedpreview(publication,
-                                                                     bibfile,
-                                                                     bibstyle)),
-                    keywords=publication_keywords)
-
-
-def make_keywords():
-    keywords = defaultdict(list)
-    for pub in pubs:
-        for kw in publication_keywords(pub):
-            keywords[kw].append(pub)
-
-    render_template('keywords.html', keywords=keywords)
-
-
-def make_years():
-    years = defaultdict(list)
-    for pub in pubs:
-        year = pub.fields[u'Year'].value.get()
-        if year != '':
-            years[year].append(pub)
-
-    render_template('years.html', years=years)
-
-
-def make_authors():
-    authors = doc.authors.get()
-    names = sorted(authors, key=lambda x: x.last_name.get())
-
-    render_template('authors.html', authors=authors, names=names)
-
-
-def make_journals():
-    journals = defaultdict(list)
-
-    for pub in pubs:
-        journal = pub.fields[u'Journal'].value.get() or pub.fields[u'Booktitle'].value.get()
-        if journal != '':
-            journals[journal].append(pub)
-
-    render_template('journals.html', journals=journals)
-
-
-make_detail()
-make_keywords()
-make_years()
-make_authors()
-make_journals()
-
-shutil.rmtree(os.path.join(outdir, 'static'), True)
-shutil.copytree(os.path.join(templatedir,'static'), os.path.join(outdir, 'static'))
+if __name__ == "__main__":
+    main()

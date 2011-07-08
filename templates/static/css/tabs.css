@@ -1,59 +1,64 @@
+/* Based on the jQuery Tools sample CSS: http://flowplayer.org/tools/css/tabs-no-images.css */
 
-/* root element for tabs  */
-ul.tabs {  
-	margin:0 !important; 
-	padding:0;
-	height:30px;
-	border-bottom:1px solid #666;	 	
+ul.tabs {
+    margin: 0 !important;
+    padding: 0;
+    height: 30px;
+    border-bottom: 1px solid #666;
 }
 
-/* single tab */
-ul.tabs li {  
-	float:left;	 
-	padding:0; 
-	margin:0;  
-	list-style-type:none;	
+ul.tabs li {
+    float: left;
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
 }
 
-/* link inside the tab. uses a background image */
-ul.tabs a { 
-	float:left;
-	font-size:13px;
-	display:block;
-	padding:5px 30px;	
-	text-decoration:none;
-	border:1px solid #666;	
-	border-bottom:0px;
-	height:18px;
-	background-color:#efefef;
-	color:#777;
-	margin-right:2px;
-	position:relative;
-	top:1px;	
-	outline:0;
-	-moz-border-radius:4px 4px 0 0;	
+ul.tabs a {
+    float: left;
+    display: block;
+    padding: 5px 30px;
+    text-decoration: none;
+    border: 1px solid #666;
+    border-bottom: 0px;
+    height: 18px;
+    background-color: #efefef;
+    color: #777;
+    margin-right: 2px;
+    position: relative;
+    top: 1px;
 }
 
 ul.tabs a:hover {
-	background-color:#F7F7F7;
-	color:#333;
-}
-	
-/* selected tab */
-ul.tabs a.current {
-	background-color:#ddd;
-	border-bottom:1px solid #ddd;	
-	color:#000;	
-	cursor:default;
+    background-color: #F7F7F7;
+    color: #333;
 }
 
-	
-/* tab pane */
+ul.tabs a.current {
+    background-color: #ddd;
+    border-bottom: 1px solid #ddd;
+    color: #000;
+    cursor: default;
+    font-weight: bold;
+}
+
 div.pane {
-	display:none;
-	border:1px solid #666;
-	border-width:0 1px 1px 1px;
-	min-height:150px;
-	padding:15px 20px;
-	background-color:#ddd;	
+    display: none;
+    border: 1px solid #666;
+    border-width: 0 1px 1px 1px;
+    padding: 15px 20px;
+    background-color: #ddd;
+    overflow: auto;
+}
+
+dt {
+    width: 100px;
+    padding-right: 5px;
+    float: left;
+    clear: left;
+    text-align: right;
+}
+
+dd {
+    margin-left: 105px
 }

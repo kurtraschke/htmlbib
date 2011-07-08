@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% set active_page = "index" %}
+
+{% block content %}
+<div class="span-8 append-8 prepend-8 last">
+  <p class="large">
+  This is <a href="{{filename}}"><code>{{filename}}</code></a>,
+  containing <a href="detail.html">{{doc.publications.count()}} publications</a> by
+  <a href="authors.html">{{doc.authors.count()}} authors</a>,
+  organized using <a href="keywords.html">{{keywords|count}} keywords</a>. 
+  </p>
+</div>
+<div class="span-6">
+  <h2>Keywords</h2>
+  <ul>
+  {% for kw in sorted(keywords.keys()) %}
+  <li><a href="keywords.html#{{kw.replace(' ','_')}}">{{kw}}</a></li>
+  {% endfor %}
+  </ul>
+</div>
+<div class="span-6">
+  <h2>Authors</h2>
+  <ul>
+    {% for author in names %}
+    <li><a href="authors.html#{{id_hash(author.full_name.get())}}">{{fix_title(author.full_name.get())}}</a></li>
+    {% endfor %}
+  </ul>
+</div>
+<div class="span-6">
+  <h2>Publications</h2>
+  <ul>
+    {% for journal in sorted(journals.keys()) %}
+    <li><a href="journals.html#{{id_hash(journal)}}">{{journal}}</a></li>
+    {% endfor %}
+  </ul>
+</div>
+<div class="span-6 last">
+  <h2>Years</h2>
+    <ul>
+    {% for year in sorted(years.keys()) %}
+    <li><a href="years.html#{{year}}">{{year}}</a></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

@@ -1,6 +1,8 @@
+<!DOCTYPE html>
 <html>
 <head>
-{% block head %}
+{%- block head -%}
+<meta charset="UTF-8">
 <script src="static/js/jquery.tools.min.js"></script>
 <link rel="stylesheet" href="static/css/screen.css" type="text/css" media="screen, projection">
 <link rel="stylesheet" href="static/css/print.css" type="text/css" media="print">
@@ -15,9 +17,20 @@
 <div class="container">
 <header>
   <h1>Bibliography</h1>
-  <p><a href="detail.html">Details</a> | <a href="keywords.html">By
-  keyword</a> | <a href="authors.html">By author</a> | <a
-  href="journals.html">By publication</a> | <a href="years.html">By year</a></p>
+  {% set navigation_bar = [
+    ('index.html', 'index', 'Home'),
+    ('detail.html', 'detail', 'Details'),
+    ('keywords.html', 'keywords', 'By keyword'),
+    ('authors.html', 'authors', 'By author'),
+    ('journals.html', 'journals', 'By publication'),
+    ('years.html', 'years', 'By year'),
+  ] -%}
+  {% set active_page = active_page|default('index') -%}
+  <ul id="navigation" class="large">
+    {% for href, id, caption in navigation_bar %}
+    <li{% if id == active_page %} class="active"{% endif %}><a href="{{ href|e }}">{{ caption|e }}</a></li>
+    {% endfor %}
+  </ul>
 </header>
 <div id="content">
   {% block content %}{% endblock %}

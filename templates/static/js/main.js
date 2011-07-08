@@ -4,11 +4,11 @@ $(function() {
     $("button.toggler").toggle(
         function () {
             $(this).text("Show details");
-            $(this).next().hide();
+            $("section.details", $(this).parent().parent()).hide();
         },
         function () {
             $(this).text("Hide details");
-            $(this).next().show();
+            $("section.details", $(this).parent().parent()).show();
         }
     );
     $("button.toggler").click();

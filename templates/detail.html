@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% set active_page = "detail" %}
 
 {% block head %}
 {{super()}}
@@ -11,17 +12,22 @@
 <div id="{{ publication.cite_key.get() }}">
   <div class="span-2 append-2">
     <h2>{{ publication.cite_key.get() }}</h2>
+    <button class="toggler">Show details</button>
   </div>
 
-  <div class="span-18 append-2 last">
+  <div class="span-16 append-4 last">
     <div class="citepreview">
        {{preview(publication)}}
-       <p>Keywords: {% for kw in keywords(publication) %}<a
-href="keywords.html#{{kw.replace(' ','_')}}">{{kw}}</a>{{ ', ' if not
-loop.last}}{% endfor %}</p>
     </div>
 
-    <button class="toggler">Show details</button>
+    <div class="notes">
+      {{publication.note.get()|nl2br}}
+    </div>
+    
+    <div class="keywords">
+      <p>Keywords: {% for kw in split_keywords(publication) %}<a href="keywords.html#{{kw.replace(' ','_')}}">{{kw}}</a>{{ ', ' if not loop.last}}{% endfor %}</p>
+    </div>
+    
     <section class="details">
       <ul class="tabs">
         <a href="#">Fields</a>
@@ -46,7 +52,5 @@ loop.last}}{% endfor %}</p>
   </div>
 </div>
 <hr>
-
 {% endfor %}
-
 {% endblock %}
