@@ -32,6 +32,8 @@ class BibMaker(object):
         if not os.path.exists(self.cachedir):
             os.mkdir(self.cachedir)
 
+        self.previewcachefile = os.path.join(self.cachedir, "previews")
+
         templatecachedir = os.path.join(self.cachedir, "templates")
         if not os.path.exists(templatecachedir):
             os.mkdir(templatecachedir)
@@ -78,7 +80,7 @@ class BibMaker(object):
                                          cachedpreview(publication,
                                                        self.bibfile,
                                                        self.bibstyle,
-                                                       self.cachedir))},
+                                                       self.previewcachefile))},
                      'keywords.html': {},
                      'years.html': {},
                      'authors.html': {},
@@ -98,10 +100,10 @@ class BibMaker(object):
         stream.dump(os.path.join(self.outdir, template_name), "utf-8")
 
 
-def cachedpreview(publication, bibfile, bibstyle, cachedir):
+def cachedpreview(publication, bibfile, bibstyle, cachefile):
     citekey = str(publication.cite_key.get())
     lastmod = publication.modified_date.get()
-    with closing(shelve.open(os.path.join(cachedir, "previews"))) as cache:
+    with closing(shelve.open(cachefile)) as cache:
         if citekey not in cache or lastmod > cache[citekey]['lastmod']:
             data = {'lastmod': lastmod,
                     'preview': htmlpreview(bibfile, citekey, bibstyle)}
