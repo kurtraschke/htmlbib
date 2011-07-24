@@ -51,13 +51,14 @@ def htmlpreview(bibfile, citekey, bibstyle):
 
 def main():
     parser = argparse.ArgumentParser(description='Generate an HTML preview for a BibTeX entry.')
+    parser.add_argument('-s', '--style', help="BibTeX style", default='IEEEtran')
     parser.add_argument('file', help='BibTeX file')
     parser.add_argument('citekey', help='cite key')
     args = parser.parse_args()
 
     inputfile = os.path.abspath(args.file)
 
-    print htmlpreview(inputfile, args.citekey)
+    print htmlpreview(inputfile, args.citekey, args.style)
 
 if __name__ == '__main__':
     main()
