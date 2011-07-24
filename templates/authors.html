@@ -6,7 +6,7 @@
 <div class="span-16 append-4 prepend-4">
 <ul>
 {% for author in names %}
-<li id={{id_hash(author.full_name.get())}}">{{fix_title(author.full_name.get())}}
+<li id="{{id_hash(author.full_name.get())}}">{{fix_title(author.full_name.get())}}
   <ul>
     {% for pub in author.publications.get() %}
     <li><a href="detail.html#{{pub.cite_key.get()}}">{{fix_title(pub.title.get())}}</a></li>
