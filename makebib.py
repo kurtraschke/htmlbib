@@ -6,7 +6,6 @@ import shutil
 import re
 from contextlib import closing
 from collections import defaultdict
-from zlib import crc32
 
 from appscript import *
 from mactypes import *
@@ -14,7 +13,7 @@ from jinja2 import Environment, FileSystemLoader
 from jinja2 import Markup, FileSystemBytecodeCache
 
 from makepreview import htmlpreview
-from tools import fix_title, publication_keywords, nl2br
+from tools import fix_title, publication_keywords, nl2br, id_hash
 
 
 class BibMaker(object):
@@ -43,13 +42,15 @@ class BibMaker(object):
         self.pubs = self.doc.publications.get()
         self.sortedpubs = bd.sort(self.pubs, by=u'cite key')
 
-        self.env = Environment(loader=FileSystemLoader(self.templatedir),
-                               bytecode_cache=FileSystemBytecodeCache(directory=templatecachedir),
+        loader = FileSystemLoader(self.templatedir)
+        bytecode_cache = FileSystemBytecodeCache(directory=templatecachedir)
+
+        self.env = Environment(loader=loader, bytecode_cache=bytecode_cache,
                                autoescape=True)
 
         self.env.globals.update({'sorted': sorted, 'fix_title': fix_title,
                                  'split_keywords': publication_keywords,
-                                 'id_hash': lambda x: "%08x" % (crc32(x.encode('utf-8')) & 0xffffffff)})
+                                 'id_hash': id_hash})
         self.env.filters['nl2br'] = nl2br
 
         self.journals = defaultdict(list)
@@ -58,7 +59,8 @@ class BibMaker(object):
         self.authors = defaultdict(list)
 
         for pub in self.pubs:
-            journal = pub.fields[u'Journal'].value.get() or pub.fields[u'Booktitle'].value.get()
+            journal = pub.fields[u'Journal'].value.get() or \
+                      pub.fields[u'Booktitle'].value.get()
             if journal != '':
                 self.journals[journal].append(pub)
             for kw in publication_keywords(pub):
@@ -67,7 +69,8 @@ class BibMaker(object):
             if year != '':
                 self.years[year].append(pub)
             for author in pub.authors.get():
-                self.authors[author.abbreviated_normalized_name.get()].append(pub)
+                name = author.abbreviated_normalized_name.get()
+                self.authors[name].append(pub)
 
         self.env.globals.update({'doc': self.doc, 'pubs': self.pubs,
                                  'sortedpubs': self.sortedpubs,
@@ -76,12 +79,14 @@ class BibMaker(object):
                                  'years': self.years,
                                  'authors': self.authors})
 
+        def preview(publication):
+            return Markup(cachedpreview(publication,
+                                        self.bibfile,
+                                        self.bibstyle,
+                                        self.previewcachefile))
+
         templates = {'detail.html': {'publications': self.sortedpubs,
-                                     'preview': lambda publication: Markup(
-                                         cachedpreview(publication,
-                                                       self.bibfile,
-                                                       self.bibstyle,
-                                                       self.previewcachefile))},
+                                     'preview': preview},
                      'keywords.html': {},
                      'years.html': {},
                      'authors.html': {},
@@ -92,7 +97,8 @@ class BibMaker(object):
             self.render_template(template, **args)
 
         shutil.rmtree(os.path.join(self.outdir, 'static'), True)
-        shutil.copytree(os.path.join(self.templatedir, 'static'), os.path.join(self.outdir, 'static'))
+        shutil.copytree(os.path.join(self.templatedir, 'static'),
+                        os.path.join(self.outdir, 'static'))
         shutil.copy(self.bibfile, self.outdir)
 
     def render_template(self, template_name, **kwargs):
@@ -115,11 +121,14 @@ def cachedpreview(publication, bibfile, bibstyle, cachefile):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Generate an HTML preview for a BibTeX entry.')
-    parser.add_argument('-s', '--style', help="BibTeX style", default='IEEEtran')
+    parser = argparse.ArgumentParser(
+        description='Generate an HTML preview for a BibTeX entry.')
+    parser.add_argument('-s', '--style', help="BibTeX style",
+                        default='IEEEtran')
     parser.add_argument('file', help='BibTeX file')
     parser.add_argument('outdir', help='Output directory')
-    parser.add_argument('templatedir', help='Template directory', default='templates')
+    parser.add_argument('templatedir', help='Template directory',
+                        default='templates')
 
     args = parser.parse_args()
     bibfile = os.path.abspath(args.file)

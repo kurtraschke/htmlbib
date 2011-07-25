@@ -1,4 +1,6 @@
 import re
+from zlib import crc32
+
 
 from jinja2 import evalcontextfilter, Markup, escape
 
@@ -39,3 +41,7 @@ def nl2br(eval_ctx, value):
     if eval_ctx.autoescape:
         result = Markup(result)
     return result
+
+
+def id_hash(value):
+    return "%08x" % (crc32(value.encode('utf-8')) & 0xffffffff)

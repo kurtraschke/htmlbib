@@ -50,8 +50,10 @@ def htmlpreview(bibfile, citekey, bibstyle):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Generate an HTML preview for a BibTeX entry.')
-    parser.add_argument('-s', '--style', help="BibTeX style", default='IEEEtran')
+    parser = argparse.ArgumentParser(
+        description='Generate an HTML preview for a BibTeX entry.')
+    parser.add_argument('-s', '--style', help="BibTeX style",
+                        default='IEEEtran')
     parser.add_argument('file', help='BibTeX file')
     parser.add_argument('citekey', help='cite key')
     args = parser.parse_args()
