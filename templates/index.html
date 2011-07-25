@@ -6,8 +6,8 @@
   <p class="large">
   This is <a href="{{filename}}"><code>{{filename}}</code></a>,
   containing <a href="detail.html">{{doc.publications.count()}} publications</a> by
-  <a href="authors.html">{{doc.authors.count()}} authors</a>,
-  organized using <a href="keywords.html">{{keywords|count}} keywords</a>. 
+  <a href="authors.html">{{authors|count}} authors</a>,
+  organized with <a href="keywords.html">{{keywords|count}} keywords</a>. 
   </p>
 </div>
 <div class="span-6">
@@ -21,8 +21,8 @@
 <div class="span-6">
   <h2>Authors</h2>
   <ul>
-    {% for author in names %}
-    <li><a href="authors.html#{{id_hash(author.full_name.get())}}">{{fix_title(author.full_name.get())}}</a></li>
+    {% for author in sorted(authors.keys()) %}
+    <li><a href="authors.html#{{id_hash(author)}}">{{fix_title(author)}}</a></li>
     {% endfor %}
   </ul>
 </div>

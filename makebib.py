@@ -55,6 +55,7 @@ class BibMaker(object):
         self.journals = defaultdict(list)
         self.keywords = defaultdict(list)
         self.years = defaultdict(list)
+        self.authors = defaultdict(list)
 
         for pub in self.pubs:
             journal = pub.fields[u'Journal'].value.get() or pub.fields[u'Booktitle'].value.get()
@@ -65,15 +66,15 @@ class BibMaker(object):
             year = pub.publication_year.get()
             if year != '':
                 self.years[year].append(pub)
+            for author in pub.authors.get():
+                self.authors[author.abbreviated_normalized_name.get()].append(pub)
 
         self.env.globals.update({'doc': self.doc, 'pubs': self.pubs,
                                  'sortedpubs': self.sortedpubs,
                                  'journals': self.journals,
                                  'keywords': self.keywords,
                                  'years': self.years,
-                                 'authors': self.doc.authors.get(),
-                                 'names': sorted(self.doc.authors.get(),
-                                                 key=lambda x: x.last_name.get())})
+                                 'authors': self.authors})
 
         templates = {'detail.html': {'publications': self.sortedpubs,
                                      'preview': lambda publication: Markup(
