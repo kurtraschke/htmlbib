@@ -2,6 +2,11 @@
 {% from 'list.html' import render_list %}
 {% set active_page = "keywords" %}
 
+{% block head %}
+{{ super() }}
+<script type="text/javascript" src="static/js/tooltips.js"></script>
+{% endblock %}
+
 {% block content %}
 <div class="span-16 append-4 prepend-4">
 {% call(key) render_list(keywords) -%}

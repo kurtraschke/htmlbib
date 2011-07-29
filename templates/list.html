@@ -1,13 +1,13 @@
 {% macro render_list(items) -%}
 <ul>
-{% for key in sorted(items.keys()) %}
+{% for key in sorted(items.keys()) -%}
 <li id="{{caller(key)}}">{{fix_title(key)}}
   <ul>
-    {% for pub in items[key] %}
-    <li><a href="detail.html#{{pub.cite_key.get()}}">{{fix_title(pub.title.get())}}</a></li>
-    {% endfor %}
+    {% for pub in items[key] -%}
+    <li><a href="detail.html#{{pub.cite_key.get()}}" class="publication">{{fix_title(pub.title.get())}}</a><div class="tooltip">{{preview(pub)}}</div></li>
+    {%- endfor %}
   </ul>
 </li>
-{% endfor %}
+{%- endfor %}
 </ul>
 {%- endmacro %}

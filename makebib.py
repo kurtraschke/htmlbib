@@ -77,16 +77,10 @@ class BibMaker(object):
                                  'journals': self.journals,
                                  'keywords': self.keywords,
                                  'years': self.years,
-                                 'authors': self.authors})
+                                 'authors': self.authors,
+                                 'preview': lambda x: self._preview(x)})
 
-        def preview(publication):
-            return Markup(cachedpreview(publication,
-                                        self.bibfile,
-                                        self.bibstyle,
-                                        self.previewcachefile))
-
-        templates = {'detail.html': {'publications': self.sortedpubs,
-                                     'preview': preview},
+        templates = {'detail.html': {'publications': self.sortedpubs},
                      'keywords.html': {},
                      'years.html': {},
                      'authors.html': {},
@@ -100,6 +94,12 @@ class BibMaker(object):
         shutil.copytree(os.path.join(self.templatedir, 'static'),
                         os.path.join(self.outdir, 'static'))
         shutil.copy(self.bibfile, self.outdir)
+
+    def _preview(self, publication):
+        return Markup(cachedpreview(publication,
+                                    self.bibfile,
+                                    self.bibstyle,
+                                    self.previewcachefile))
 
     def render_template(self, template_name, **kwargs):
         template = self.env.get_template(template_name)
