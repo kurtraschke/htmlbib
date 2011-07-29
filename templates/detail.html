@@ -23,10 +23,13 @@
     <div class="notes">
       {{publication.note.get()|nl2br|urlize}}
     </div>
-    
+
+    {% set keywords = split_keywords(publication) %}
+    {% if keywords|length > 0 %}
     <div class="keywords">
-      <p>Keywords: {% for kw in split_keywords(publication) %}<a href="keywords.html#{{kw.replace(' ','_')}}">{{kw}}</a>{{ ', ' if not loop.last}}{% endfor %}</p>
+      <p>Keywords: {% for kw in keywords %}<a href="keywords.html#{{kw.replace(' ','_')}}">{{kw}}</a>{{ ', ' if not loop.last}}{% endfor %}</p>
     </div>
+    {% endif %}
     
     <section class="details">
       <ul class="tabs">
