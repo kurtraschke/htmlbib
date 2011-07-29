@@ -1,6 +1,6 @@
 $(function() {
     $("ul.tabs").tabs("> .pane");
-    
+
     $("button.toggler").toggle(
         function () {
             $(this).text("Show details");
