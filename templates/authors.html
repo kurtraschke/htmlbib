@@ -1,19 +1,11 @@
 {% extends "base.html" %}
+{% from 'list.html' import render_list %}
 {% set active_page = "authors" %}
-
 
 {% block content %}
 <div class="span-16 append-4 prepend-4">
-<ul>
-{% for author in sorted(authors.keys()) %}
-<li id="{{id_hash(author)}}">{{fix_title(author)}}
-  <ul>
-    {% for pub in authors[author] %}
-    <li><a href="detail.html#{{pub.cite_key.get()}}">{{fix_title(pub.title.get())}}</a></li>
-    {% endfor %}
-  </ul>
-</li>
-{% endfor %}
-</ul>
+{% call(key) render_list(authors) -%}
+  {{id_hash(key)}}
+{%- endcall %}
 </div>
 {% endblock %}

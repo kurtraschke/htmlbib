@@ -1,20 +1,11 @@
 {% extends "base.html" %}
+{% from 'list.html' import render_list %}
 {% set active_page = "years" %}
 
 {% block content %}
 <div class="span-16 append-4 prepend-4">
-
-<ul>
-{% for year in sorted(years.keys()) %}
-<li id="{{year}}">{{year}}
-  <ul>
-    {% for pub in years[year] %}
-    <li><a href="detail.html#{{pub.cite_key.get()}}">{{fix_title(pub.title.get())}}</a></li>
-    {% endfor %}
-  </ul>
-</li>
-{% endfor %}
-</ul>
-
+{% call(key) render_list(years) -%}
+  {{key}}
+{%- endcall %}
 </div>
 {% endblock %}
