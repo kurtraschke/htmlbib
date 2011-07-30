@@ -1,7 +1,6 @@
 import re
 from zlib import crc32
 
-
 from jinja2 import evalcontextfilter, Markup, escape
 
 

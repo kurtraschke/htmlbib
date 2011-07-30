@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block content %}
-{% for publication in publications %}
+{% for publication in sortedpubs %}
 <div id="{{ publication.cite_key.get() }}">
   <div class="span-2 append-2">
     <h2>{{ publication.cite_key.get() }}</h2>

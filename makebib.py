@@ -45,12 +45,15 @@ class BibMaker(object):
         loader = FileSystemLoader(self.templatedir)
         bytecode_cache = FileSystemBytecodeCache(directory=templatecachedir)
 
-        self.env = Environment(loader=loader, bytecode_cache=bytecode_cache,
+        self.env = Environment(loader=loader,
+                               bytecode_cache=bytecode_cache,
                                autoescape=True)
 
-        self.env.globals.update({'sorted': sorted, 'fix_title': fix_title,
+        self.env.globals.update({'sorted': sorted,
+                                 'fix_title': fix_title,
                                  'split_keywords': publication_keywords,
                                  'id_hash': id_hash})
+
         self.env.filters['nl2br'] = nl2br
 
         self.journals = defaultdict(list)
@@ -63,32 +66,33 @@ class BibMaker(object):
                       pub.fields[u'Booktitle'].value.get()
             if journal != '':
                 self.journals[journal].append(pub)
+
             for kw in publication_keywords(pub):
                 self.keywords[kw].append(pub)
+
             year = pub.publication_year.get()
             if year != '':
                 self.years[year].append(pub)
+
             for author in pub.authors.get():
                 name = author.abbreviated_normalized_name.get()
                 self.authors[name].append(pub)
 
-        self.env.globals.update({'doc': self.doc, 'pubs': self.pubs,
+        self.env.globals.update({'doc': self.doc,
+                                 'pubs': self.pubs,
                                  'sortedpubs': self.sortedpubs,
                                  'journals': self.journals,
                                  'keywords': self.keywords,
                                  'years': self.years,
                                  'authors': self.authors,
-                                 'preview': lambda x: self._preview(x)})
+                                 'preview': lambda x: self._preview(x),
+                                 'filename': os.path.split(self.bibfile)[1]})
 
-        templates = {'detail.html': {'publications': self.sortedpubs},
-                     'keywords.html': {},
-                     'years.html': {},
-                     'authors.html': {},
-                     'journals.html': {},
-                     'index.html': {'filename': os.path.split(self.bibfile)[1]}}
+        templates = ['detail.html', 'keywords.html', 'years.html',
+                     'authors.html', 'journals.html', 'index.html']
 
-        for template, args in templates.iteritems():
-            self.render_template(template, **args)
+        for template in templates:
+            self._render_template(template)
 
         shutil.rmtree(os.path.join(self.outdir, 'static'), True)
         shutil.copytree(os.path.join(self.templatedir, 'static'),
@@ -101,7 +105,7 @@ class BibMaker(object):
                                     self.bibstyle,
                                     self.previewcachefile))
 
-    def render_template(self, template_name, **kwargs):
+    def _render_template(self, template_name, **kwargs):
         template = self.env.get_template(template_name)
         stream = template.stream(**kwargs)
         stream.dump(os.path.join(self.outdir, template_name), "utf-8")
