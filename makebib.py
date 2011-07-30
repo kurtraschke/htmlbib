@@ -1,7 +1,6 @@
 import argparse
 import os
 import os.path
-import shelve
 import shutil
 import re
 from contextlib import closing
@@ -12,8 +11,8 @@ from mactypes import *
 from jinja2 import Environment, FileSystemLoader
 from jinja2 import Markup, FileSystemBytecodeCache
 
-from makepreview import htmlpreview
 from tools import fix_title, publication_keywords, nl2br, id_hash
+from preview.pcache import PreviewCache
 
 
 class BibMaker(object):
@@ -31,7 +30,11 @@ class BibMaker(object):
         if not os.path.exists(self.cachedir):
             os.mkdir(self.cachedir)
 
-        self.previewcachefile = os.path.join(self.cachedir, "previews")
+        previewcachefile = os.path.join(self.cachedir, "previews")
+
+        self.pcache = PreviewCache(previewcachefile,
+                                   self.bibfile,
+                                   self.bibstyle)
 
         templatecachedir = os.path.join(self.cachedir, "templates")
         if not os.path.exists(templatecachedir):
@@ -100,28 +103,13 @@ class BibMaker(object):
         shutil.copy(self.bibfile, self.outdir)
 
     def _preview(self, publication):
-        return Markup(cachedpreview(publication,
-                                    self.bibfile,
-                                    self.bibstyle,
-                                    self.previewcachefile))
+        return Markup(self.pcache.get_preview(publication.cite_key.get(),
+                                              publication.modified_date.get()))
 
     def _render_template(self, template_name, **kwargs):
         template = self.env.get_template(template_name)
         stream = template.stream(**kwargs)
         stream.dump(os.path.join(self.outdir, template_name), "utf-8")
-
-
-def cachedpreview(publication, bibfile, bibstyle, cachefile):
-    citekey = str(publication.cite_key.get())
-    lastmod = publication.modified_date.get()
-    with closing(shelve.open(cachefile)) as cache:
-        if citekey not in cache or lastmod > cache[citekey]['lastmod']:
-            data = {'lastmod': lastmod,
-                    'preview': htmlpreview(bibfile, citekey, bibstyle)}
-            cache[citekey] = data
-
-        preview = cache[citekey]['preview']
-    return preview
 
 
 def main():
