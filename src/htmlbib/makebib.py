@@ -3,12 +3,12 @@ import os
 import os.path
 import shutil
 import re
-from contextlib import closing
+from pkg_resources import resource_filename
 from collections import defaultdict
 
 from appscript import *
 from mactypes import *
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, PackageLoader
 from jinja2 import Markup, FileSystemBytecodeCache
 
 from tools import fix_title, publication_keywords, nl2br, id_hash
@@ -16,10 +16,9 @@ from preview.pcache import PreviewCache
 
 
 class BibMaker(object):
-    def __init__(self, bibfile, outdir, templatedir, bibstyle):
+    def __init__(self, bibfile, outdir, bibstyle):
         self.bibfile = bibfile
         self.outdir = outdir
-        self.templatedir = templatedir
         self.bibstyle = bibstyle
 
     def makebib(self):
@@ -45,7 +44,7 @@ class BibMaker(object):
         self.pubs = self.doc.publications.get()
         self.sortedpubs = bd.sort(self.pubs, by=u'cite key')
 
-        loader = FileSystemLoader(self.templatedir)
+        loader = PackageLoader('htmlbib')
         bytecode_cache = FileSystemBytecodeCache(directory=templatecachedir)
 
         self.env = Environment(loader=loader,
@@ -98,7 +97,7 @@ class BibMaker(object):
             self._render_template(template)
 
         shutil.rmtree(os.path.join(self.outdir, 'static'), True)
-        shutil.copytree(os.path.join(self.templatedir, 'static'),
+        shutil.copytree(resource_filename('htmlbib', 'templates/static'),
                         os.path.join(self.outdir, 'static'))
         shutil.copy(self.bibfile, self.outdir)
 
@@ -119,16 +118,13 @@ def main():
                         default='IEEEtran')
     parser.add_argument('file', help='BibTeX file')
     parser.add_argument('outdir', help='Output directory')
-    parser.add_argument('templatedir', help='Template directory',
-                        default='templates')
 
     args = parser.parse_args()
     bibfile = os.path.abspath(args.file)
     outdir = os.path.abspath(args.outdir)
-    templatedir = os.path.abspath(args.templatedir)
     bibstyle = args.style
 
-    BibMaker(bibfile, outdir, templatedir, bibstyle).makebib()
+    BibMaker(bibfile, outdir, bibstyle).makebib()
 
 if __name__ == "__main__":
     main()
