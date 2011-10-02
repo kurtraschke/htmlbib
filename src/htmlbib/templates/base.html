@@ -1,4 +1,18 @@
 <!DOCTYPE html>
+{% set navigation_bar = [
+  ('index.html', 'index', 'Home'),
+  ('detail.html', 'detail', 'Details'),
+  ('keywords.html', 'keywords', 'By keyword'),
+  ('authors.html', 'authors', 'By author'),
+  ('journals.html', 'journals', 'By publication'),
+  ('years.html', 'years', 'By year'),
+] -%}
+{% set active_page = active_page|default('index') -%}
+{%- macro find_caption(navigation_bar, active_page) -%}
+    {%- for href, id, caption in navigation_bar if id == active_page -%}
+      {{ caption|e }}
+    {%- endfor -%}
+{%- endmacro -%}
 <html>
 <head>
 {%- block head -%}
@@ -10,22 +24,13 @@
   <link rel="stylesheet" href="static/css/ie.css" type="text/css" media="screen, projection">
 <![endif]-->
 <link rel="stylesheet" type="text/css" href="static/css/site.css">
-<title>{% block title %}{% endblock %}</title>
+<title>{% block title %}{{find_caption(navigation_bar, active_page)}}{% endblock %} - Bibliography</title>
 {% endblock %}
 </head>
 <body>
 <div class="container">
 <header id="head">
   <h1>Bibliography</h1>
-  {% set navigation_bar = [
-    ('index.html', 'index', 'Home'),
-    ('detail.html', 'detail', 'Details'),
-    ('keywords.html', 'keywords', 'By keyword'),
-    ('authors.html', 'authors', 'By author'),
-    ('journals.html', 'journals', 'By publication'),
-    ('years.html', 'years', 'By year'),
-  ] -%}
-  {% set active_page = active_page|default('index') -%}
   <ul id="navigation" class="large">
     {% for href, id, caption in navigation_bar %}
     <li{% if id == active_page %} class="active"{% endif %}><a href="{{ href|e }}">{{ caption|e }}</a></li>
