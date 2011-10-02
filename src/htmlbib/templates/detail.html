@@ -21,7 +21,7 @@
     </div>
 
     <div class="notes">
-      {{publication.note.get()|nl2br|urlize}}
+      {{publication.note.get()|urlize|nl2br}}
     </div>
 
     {% set keywords = split_keywords(publication) %}
