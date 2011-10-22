@@ -4,7 +4,19 @@ on run
 			set alertResult to display alert ("Really remove all linked files and private notes from " & name of first document as string) & "?" buttons {"Cancel", "OK"} default button "OK" cancel button "Cancel" as warning
 			
 			if button returned of alertResult is "OK" then
-				save first document in "Filtered " & (name of first document as string) & ".bib"
+				set theDocument to first document
+				
+				save theDocument
+				
+				set theFile to (theDocument's file) as alias
+				
+				tell application "Finder"
+					set theContainer to (container of theFile) as alias
+					set newFile to make new file with properties {container:theFile, name:"Filtered " & ((name of theDocument) as string)}
+				end tell
+				return
+				
+				save first document in (newFile as file)
 				repeat with thePub in first document's publications
 					set thePub's note to my splitNote(thePub's note)
 					repeat with theFile in thePub's linked files
@@ -27,7 +39,7 @@ to splitNote(theNoteText)
 		set theParts to every text item of theNoteText
 		
 		if length of theParts is greater than 1 then
-			set outText to text 2 through end of last item of theParts
+			set outText to (text 2 through end) of last item of theParts
 		else
 			set outText to ""
 		end if
