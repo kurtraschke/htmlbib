@@ -1,0 +1,36 @@
+.cmti-10 {
+    font-style:italic;
+}
+
+#navigation {
+    padding: 0;
+}
+
+#navigation li {
+    display: inline;
+    list-style-type: none;
+}
+
+#navigation li:not(:last-child):after {
+    content: " | ";
+}
+
+#navigation li.active a {
+    cursor: default;
+    font-weight: bold;
+}
+
+.tooltip {
+    width: 300px;
+    display:none;
+    background-color:#ddd;
+    color: #000;
+    border:1px solid #cc9;
+    padding:3px;
+    box-shadow: 2px 2px 11px #666;
+}
+
+.tooltip a {
+    word-wrap: break-word;
+    word-break: break-all;
+}
