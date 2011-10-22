@@ -30,7 +30,7 @@
   <h2>Publications</h2>
   <ul>
     {% for journal in sorted(journals.keys()) %}
-    <li><a href="journals.html#{{id_hash(journal)}}">{{journal}}</a></li>
+    <li><a href="journals.html#{{id_hash(journal)}}">{{fix_title(journal)}}</a></li>
     {% endfor %}
   </ul>
 </div>
